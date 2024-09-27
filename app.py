@@ -1,3 +1,4 @@
+
 import streamlit as st
 import google.generativeai as gen_ai
 import requests
@@ -48,7 +49,12 @@ if option == "Creador de Contenido":
     tipo_contenido = st.selectbox("Selecciona el tipo de contenido:", ["Artículo", "Publicación para Redes Sociales", "Boletín", "Anuncio"])
 
     # Opción para generar o subir imagen
-    generar_imagen = st.radio("¿Quieres generar una imagen?", ("Sí", "No"))
+    imagen_opcion = st.radio("¿Quieres generar una imagen o subir una existente?", ("Generar Imagen", "Subir Imagen"))
+
+    # Subida de imagen si se elige subir
+    uploaded_image = None
+    if imagen_opcion == "Subir Imagen":
+        uploaded_image = st.file_uploader("Sube una imagen (formato: .jpg, .png)", type=["jpg", "png"])
 
     # Botón para generar contenido
     if st.button("Generar Contenido"):
@@ -80,7 +86,7 @@ if option == "Creador de Contenido":
                 st.markdown(f"### Contenido Generado:\n{gemini_response.text}")
 
                 # Si el usuario eligió generar una imagen
-                if generar_imagen == "Sí":
+                if imagen_opcion == "Generar Imagen":
                     # Generación de imagen basada en el tema
                     translator = Translator()
                     translated_prompt = translator.translate(tema, src='es', dest='en').text
@@ -102,8 +108,12 @@ if option == "Creador de Contenido":
 
                         # Mostrar la imagen generada
                         st.image(st.session_state.image, caption="Imagen Generada", use_column_width=True)
+
+                elif uploaded_image is not None:
+                    # Mostrar la imagen subida
+                    st.image(uploaded_image, caption="Imagen Subida", use_column_width=True)
                 else:
-                    st.success("No se generó ninguna imagen, pero puedes subir una si lo deseas.")
+                    st.success("No se generó ninguna imagen y no se subió ninguna.")
 
             except Exception as e:
                 st.error(f"Ocurrió un error al generar el contenido: {str(e)}")
@@ -200,4 +210,3 @@ else:  # Opción: Creador de Campañas de Marketing
 
             except Exception as e:
                 st.error(f"Ocurrió un error al generar la estrategia: {str(e)}")
-
