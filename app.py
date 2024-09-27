@@ -39,17 +39,6 @@ if option == "Creador de Contenido":
     tema = st.text_area("Introduce el tema del contenido que deseas generar:")
     tipo_contenido = st.selectbox("Selecciona el tipo de contenido:", ["Artículo", "Publicación para Redes Sociales", "Boletín", "Anuncio"])
 
-    # Generador de imágenes
-    user_prompt = st.text_input("¿Qué imagen deseas generar?")
-
-    # Definir la API y los headers de Hugging Face
-    API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
-    headers = {"Authorization": "Bearer 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"}
-
-    def query(payload):
-        response = requests.post(API_URL, headers=headers, json=payload)
-        return response
-
     if st.button("Generar Contenido"):
         if not tema:
             st.error("Por favor, ingresa un tema para generar contenido.")
@@ -76,74 +65,73 @@ if option == "Creador de Contenido":
                 gemini_response = chat_session.send_message(prompt)
 
                 st.markdown(f"## Contenido Generado:\n{gemini_response.text}")
+
+                # Generación de imágenes basada en el tema
+                translator = Translator()
+                translated_prompt = translator.translate(tema, src='es', dest='en').text
+                
+                # Variar ligeramente el prompt para las dos imágenes
+                prompt_suffix_1 = f" with vibrant colors {random.randint(1, 1000)}"
+                prompt_suffix_2 = f" with a dreamy atmosphere {random.randint(1, 1000)}"
+                prompt_1 = translated_prompt + prompt_suffix_1
+                prompt_2 = translated_prompt 
+                
+                # Generar las imágenes en paralelo usando concurrent.futures
+                with st.spinner("Generando imágenes..."):
+                    with concurrent.futures.ThreadPoolExecutor() as executor:
+                        future_image_1 = executor.submit(query, {"inputs": prompt_1})
+                        future_image_2 = executor.submit(query, {"inputs": prompt_2})
+                        
+                        # Obtener los resultados
+                        image_bytes_1 = future_image_1.result()
+                        image_bytes_2 = future_image_2.result()
+
+                # Manejo de errores
+                if image_bytes_1.status_code == 429 or image_bytes_2.status_code == 429:
+                    st.error("Error 429: Has alcanzado el límite de uso gratuito. Considera suscribirte a IngenIAr mensual.")
+                else:
+                    # Comprobar si hay otros errores
+                    if image_bytes_1.status_code != 200 or image_bytes_2.status_code != 200:
+                        st.error("Hubo un problema al generar las imágenes. Intenta de nuevo más tarde.")
+                    else:
+                        # Abrir las imágenes desde las respuestas
+                        st.session_state.image_1 = Image.open(io.BytesIO(image_bytes_1.content))
+                        st.session_state.image_2 = Image.open(io.BytesIO(image_bytes_2.content))
+
+                # Si las imágenes ya se han generado, mostrarlas
+                if 'image_1' in st.session_state and 'image_2' in st.session_state:
+                    col1, col2 = st.columns(2)
+                    
+                    with col1:
+                        st.image(st.session_state.image_1, caption="Imagen 1", use_column_width=True)
+                    
+                    with col2:
+                        st.image(st.session_state.image_2, caption="Imagen 2", use_column_width=True)
+
+                    # Crear botones de descarga para ambas imágenes
+                    buf1 = io.BytesIO()
+                    buf2 = io.BytesIO()
+                    st.session_state.image_1.save(buf1, format="PNG")
+                    st.session_state.image_2.save(buf2, format="PNG")
+                    buf1.seek(0)
+                    buf2.seek(0)
+
+                    col1.download_button(
+                        label="Descargar Imagen 1",
+                        data=buf1,
+                        file_name="imagen_1.png",
+                        mime="image/png"
+                    )
+
+                    col2.download_button(
+                        label="Descargar Imagen 2",
+                        data=buf2,
+                        file_name="imagen_2.png",
+                        mime="image/png"
+                    )
+
             except Exception as e:
                 st.error(f"Ocurrió un error al generar el contenido: {str(e)}")
-
-    if st.button("Generar Imágenes"):
-        if user_prompt:
-            # Crear el objeto traductor
-            translator = Translator()
-            translated_prompt = translator.translate(user_prompt, src='es', dest='en').text
-            
-            # Variar ligeramente el prompt para las dos imágenes
-            prompt_suffix_1 = f" with vibrant colors {random.randint(1, 1000)}"
-            prompt_suffix_2 = f" with a dreamy atmosphere {random.randint(1, 1000)}"
-            prompt_1 = translated_prompt + prompt_suffix_1
-            prompt_2 = translated_prompt 
-            
-            # Generar las imágenes en paralelo usando concurrent.futures
-            with st.spinner("Generando imágenes..."):
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future_image_1 = executor.submit(query, {"inputs": prompt_1})
-                    future_image_2 = executor.submit(query, {"inputs": prompt_2})
-                    
-                    # Obtener los resultados
-                    image_bytes_1 = future_image_1.result()
-                    image_bytes_2 = future_image_2.result()
-
-            # Manejo de errores
-            if image_bytes_1.status_code == 429 or image_bytes_2.status_code == 429:
-                st.error("Error 429: Has alcanzado el límite de uso gratuito. Considera suscribirte a IngenIAr mensual.")
-            else:
-                # Comprobar si hay otros errores
-                if image_bytes_1.status_code != 200 or image_bytes_2.status_code != 200:
-                    st.error("Hubo un problema al generar las imágenes. Intenta de nuevo más tarde.")
-                else:
-                    # Abrir las imágenes desde las respuestas
-                    st.session_state.image_1 = Image.open(io.BytesIO(image_bytes_1.content))
-                    st.session_state.image_2 = Image.open(io.BytesIO(image_bytes_2.content))
-
-    # Si las imágenes ya se han generado, mostrarlas
-    if 'image_1' in st.session_state and 'image_2' in st.session_state:
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            st.image(st.session_state.image_1, caption="Imagen 1", use_column_width=True)
-        
-        with col2:
-            st.image(st.session_state.image_2, caption="Imagen 2", use_column_width=True)
-
-        # Crear botones de descarga para ambas imágenes
-        buf1 = io.BytesIO()
-        buf2 = io.BytesIO()
-        st.session_state.image_1.save(buf1, format="PNG")
-        st.session_state.image_2.save(buf2, format="PNG")
-        buf1.seek(0)
-        buf2.seek(0)
-
-        col1.download_button(
-            label="Descargar Imagen 1",
-            data=buf1,
-            file_name="imagen_1.png",
-            mime="image/png"
-        )
-
-        col2.download_button(
-            label="Descargar Imagen 2",
-            data=buf2,
-            file_name="imagen_2.png",
-            mime="image/png"
-        )
 
 elif option == "Analizador de Audiencia":
     st.header("Analizador de Audiencia")
