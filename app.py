@@ -50,11 +50,7 @@ if option == "Creador de Contenido":
     # Opción para generar o subir imagen
     generar_imagen = st.radio("¿Quieres generar una imagen?", ("Sí", "No"))
 
-    if generar_imagen == "Sí":
-        st.text("La imagen se generará automáticamente basada en el contenido.")
-    else:
-        uploaded_image = st.file_uploader("Sube una imagen existente (opcional)", type=["png", "jpg", "jpeg"])
-
+    # Botón para generar contenido
     if st.button("Generar Contenido"):
         if not tema:
             st.error("Por favor, ingresa un tema para generar contenido.")
@@ -80,13 +76,8 @@ if option == "Creador de Contenido":
 
                 gemini_response = chat_session.send_message(prompt)
 
-                # Campo para editar el contenido generado
-                contenido_editable = st.text_area("Contenido Generado (puedes editar aquí):", value=gemini_response.text, height=200)
-
-                # Botón para guardar el contenido editado
-                if st.button("Guardar Contenido"):
-                    st.success("Contenido guardado exitosamente.")
-                    # Aquí podrías guardar el contenido a una base de datos o archivo, si es necesario
+                # Mostrar el contenido generado
+                st.markdown(f"### Contenido Generado:\n{gemini_response.text}")
 
                 # Si el usuario eligió generar una imagen
                 if generar_imagen == "Sí":
@@ -96,7 +87,7 @@ if option == "Creador de Contenido":
                     prompt_suffix = f" with vibrant colors {random.randint(1, 1000)}"
                     final_prompt = translated_prompt + prompt_suffix
 
-                    # Generar la imagen usando concurrent.futures
+                    # Generar la imagen usando la función query
                     with st.spinner("Generando imagen..."):
                         image_response = query({"inputs": final_prompt})
 
@@ -112,9 +103,7 @@ if option == "Creador de Contenido":
                         # Mostrar la imagen generada
                         st.image(st.session_state.image, caption="Imagen Generada", use_column_width=True)
                 else:
-                    # Si el usuario sube una imagen
-                    if uploaded_image is not None:
-                        st.image(uploaded_image, caption="Imagen Subida", use_column_width=True)
+                    st.success("No se generó ninguna imagen, pero puedes subir una si lo deseas.")
 
             except Exception as e:
                 st.error(f"Ocurrió un error al generar el contenido: {str(e)}")
@@ -128,6 +117,7 @@ elif option == "Analizador de Audiencia":
     # Subida de archivo PDF
     uploaded_file = st.file_uploader("Sube un archivo PDF con estadísticas adicionales", type="pdf")
 
+    # Botón para analizar audiencia
     if st.button("Analizar Audiencia"):
         if not datos_publico:
             st.error("Por favor, ingresa información sobre tu público objetivo.")
@@ -163,15 +153,9 @@ elif option == "Analizador de Audiencia":
 
                 gemini_response = chat_session.send_message(prompt)
 
-                # Campo para editar el análisis generado
-                analisis_editable = st.text_area("Análisis de Audiencia (puedes editar aquí):", value=gemini_response.text, height=200)
+                # Mostrar el análisis generado
+                st.markdown(f"### Análisis de Audiencia:\n{gemini_response.text}")
 
-                # Botón para guardar el análisis editado
-                if st.button("Guardar Análisis"):
-                    st.success("Análisis guardado exitosamente.")
-                    # Aquí podrías guardar el análisis a una base de datos o archivo, si es necesario
-
-                st.markdown(f"## Análisis de Audiencia Editado:\n{analisis_editable}")
             except Exception as e:
                 st.error(f"Ocurrió un error al analizar la audiencia: {str(e)}")
 
@@ -182,6 +166,7 @@ else:  # Opción: Creador de Campañas de Marketing
     objetivos = st.text_area("Introduce los objetivos de tu campaña de marketing:")
     mensaje = st.text_area("¿Qué mensaje quieres transmitir en tu campaña?")
     
+    # Botón para generar estrategia de marketing
     if st.button("Generar Estrategia de Marketing"):
         if not objetivos or not mensaje:
             st.error("Por favor, completa todos los campos antes de generar la estrategia.")
@@ -210,14 +195,9 @@ else:  # Opción: Creador de Campañas de Marketing
 
                 gemini_response = chat_session.send_message(prompt)
 
-                # Campo para editar la estrategia generada
-                estrategia_editable = st.text_area("Estrategia de Marketing Generada (puedes editar aquí):", value=gemini_response.text, height=200)
+                # Mostrar la estrategia generada
+                st.markdown(f"### Estrategia de Marketing Generada:\n{gemini_response.text}")
 
-                # Botón para guardar la estrategia editada
-                if st.button("Guardar Estrategia"):
-                    st.success("Estrategia guardada exitosamente.")
-                    # Aquí podrías guardar la estrategia a una base de datos o archivo, si es necesario
-
-                st.markdown(f"## Estrategia de Marketing Editada:\n{estrategia_editable}")
             except Exception as e:
                 st.error(f"Ocurrió un error al generar la estrategia: {str(e)}")
+
