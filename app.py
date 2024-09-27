@@ -96,18 +96,6 @@ if option == "Creador de Contenido":
                     # Mostrar la imagen generada
                     st.image(st.session_state.image, caption="Imagen Generada", use_column_width=True)
 
-                    # Crear botón de descarga para la imagen
-                    buf = io.BytesIO()
-                    st.session_state.image.save(buf, format="PNG")
-                    buf.seek(0)
-
-                    st.download_button(
-                        label="Descargar Imagen",
-                        data=buf,
-                        file_name="imagen_generada.png",
-                        mime="image/png"
-                    )
-
             except Exception as e:
                 st.error(f"Ocurrió un error al generar el contenido: {str(e)}")
 
