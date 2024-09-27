@@ -83,6 +83,11 @@ if option == "Creador de Contenido":
                 # Campo para editar el contenido generado
                 contenido_editable = st.text_area("Contenido Generado (puedes editar aquí):", value=gemini_response.text, height=200)
 
+                # Botón para guardar el contenido editado
+                if st.button("Guardar Contenido"):
+                    st.success("Contenido guardado exitosamente.")
+                    # Aquí podrías guardar el contenido a una base de datos o archivo, si es necesario
+
                 # Si el usuario eligió generar una imagen
                 if generar_imagen == "Sí":
                     # Generación de imagen basada en el tema
@@ -161,6 +166,11 @@ elif option == "Analizador de Audiencia":
                 # Campo para editar el análisis generado
                 analisis_editable = st.text_area("Análisis de Audiencia (puedes editar aquí):", value=gemini_response.text, height=200)
 
+                # Botón para guardar el análisis editado
+                if st.button("Guardar Análisis"):
+                    st.success("Análisis guardado exitosamente.")
+                    # Aquí podrías guardar el análisis a una base de datos o archivo, si es necesario
+
                 st.markdown(f"## Análisis de Audiencia Editado:\n{analisis_editable}")
             except Exception as e:
                 st.error(f"Ocurrió un error al analizar la audiencia: {str(e)}")
@@ -202,6 +212,11 @@ else:  # Opción: Creador de Campañas de Marketing
 
                 # Campo para editar la estrategia generada
                 estrategia_editable = st.text_area("Estrategia de Marketing Generada (puedes editar aquí):", value=gemini_response.text, height=200)
+
+                # Botón para guardar la estrategia editada
+                if st.button("Guardar Estrategia"):
+                    st.success("Estrategia guardada exitosamente.")
+                    # Aquí podrías guardar la estrategia a una base de datos o archivo, si es necesario
 
                 st.markdown(f"## Estrategia de Marketing Editada:\n{estrategia_editable}")
             except Exception as e:
