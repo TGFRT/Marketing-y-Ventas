@@ -1,10 +1,8 @@
-
 import streamlit as st
 import google.generativeai as gen_ai
 import requests
 import io
 from PIL import Image
-import concurrent.futures
 import random
 from googletrans import Translator
 import time
@@ -82,8 +80,9 @@ if option == "Creador de Contenido":
 
                 gemini_response = chat_session.send_message(prompt)
 
-                # Mostrar el contenido generado
-                st.markdown(f"### Contenido Generado:\n{gemini_response.text}")
+                # Mostrar el contenido generado con opción de copiar
+                st.markdown(f"### Contenido Generado:\n")
+                st.text_area("Texto generado:", value=gemini_response.text, height=200, key="generated_content", help="Puedes copiar el texto generado seleccionándolo.", disabled=False)
 
                 # Si el usuario eligió generar una imagen
                 if imagen_opcion == "Generar Imagen":
@@ -163,8 +162,9 @@ elif option == "Analizador de Audiencia":
 
                 gemini_response = chat_session.send_message(prompt)
 
-                # Mostrar el análisis generado
-                st.markdown(f"### Análisis de Audiencia:\n{gemini_response.text}")
+                # Mostrar el análisis generado con opción de copiar
+                st.markdown(f"### Análisis de Audiencia Generado:\n")
+                st.text_area("Análisis generado:", value=gemini_response.text, height=200, key="audiencia_content", help="Puedes copiar el análisis generado seleccionándolo.", disabled=False)
 
             except Exception as e:
                 st.error(f"Ocurrió un error al analizar la audiencia: {str(e)}")
@@ -175,7 +175,7 @@ else:  # Opción: Creador de Campañas de Marketing
     # Entradas para la campaña
     objetivos = st.text_area("Introduce los objetivos de tu campaña de marketing:")
     mensaje = st.text_area("¿Qué mensaje quieres transmitir en tu campaña?")
-    
+
     # Botón para generar estrategia de marketing
     if st.button("Generar Estrategia de Marketing"):
         if not objetivos or not mensaje:
@@ -205,8 +205,9 @@ else:  # Opción: Creador de Campañas de Marketing
 
                 gemini_response = chat_session.send_message(prompt)
 
-                # Mostrar la estrategia generada
-                st.markdown(f"### Estrategia de Marketing Generada:\n{gemini_response.text}")
+                # Mostrar la estrategia generada con opción de copiar
+                st.markdown(f"### Estrategia de Marketing Generada:\n")
+                st.text_area("Estrategia generada:", value=gemini_response.text, height=200, key="marketing_strategy", help="Puedes copiar la estrategia generada seleccionándola.", disabled=False)
 
             except Exception as e:
                 st.error(f"Ocurrió un error al generar la estrategia: {str(e)}")
