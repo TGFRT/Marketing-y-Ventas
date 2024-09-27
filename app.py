@@ -7,6 +7,7 @@ import concurrent.futures
 import random
 from googletrans import Translator
 import time
+import PyPDF2  # Asegúrate de tener esta importación para manejar PDFs
 
 # Configura Streamlit
 st.set_page_config(page_title="CREADOR DE MARKETING CON INGENIAR", page_icon=":rocket:", layout="centered")
@@ -22,6 +23,13 @@ generation_config = {
     "top_k": 64,
     "max_output_tokens": 8192,
 }
+
+# Función para hacer la solicitud a la API de Hugging Face para generar imágenes
+def query(payload):
+    API_URL = "https://api-inference.huggingface.co/models/black-forest-labs/FLUX.1-schnell"
+    headers = {"Authorization": "Bearer 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"}
+    response = requests.post(API_URL, headers=headers, json=payload)
+    return response
 
 # Título de la web
 st.title("CREADOR DE MARKETING CON INGENIAR 🚀")
@@ -66,67 +74,37 @@ if option == "Creador de Contenido":
 
                 st.markdown(f"## Contenido Generado:\n{gemini_response.text}")
 
-                # Generación de imágenes basada en el tema
+                # Generación de imagen basada en el tema
                 translator = Translator()
                 translated_prompt = translator.translate(tema, src='es', dest='en').text
-                
-                # Variar ligeramente el prompt para las dos imágenes
-                prompt_suffix_1 = f" with vibrant colors {random.randint(1, 1000)}"
-                prompt_suffix_2 = f" with a dreamy atmosphere {random.randint(1, 1000)}"
-                prompt_1 = translated_prompt + prompt_suffix_1
-                prompt_2 = translated_prompt 
-                
-                # Generar las imágenes en paralelo usando concurrent.futures
-                with st.spinner("Generando imágenes..."):
-                    with concurrent.futures.ThreadPoolExecutor() as executor:
-                        future_image_1 = executor.submit(query, {"inputs": prompt_1})
-                        future_image_2 = executor.submit(query, {"inputs": prompt_2})
-                        
-                        # Obtener los resultados
-                        image_bytes_1 = future_image_1.result()
-                        image_bytes_2 = future_image_2.result()
+                prompt_suffix = f" with vibrant colors {random.randint(1, 1000)}"
+                final_prompt = translated_prompt + prompt_suffix
+
+                # Generar la imagen usando concurrent.futures
+                with st.spinner("Generando imagen..."):
+                    image_response = query({"inputs": final_prompt})
 
                 # Manejo de errores
-                if image_bytes_1.status_code == 429 or image_bytes_2.status_code == 429:
+                if image_response.status_code == 429:
                     st.error("Error 429: Has alcanzado el límite de uso gratuito. Considera suscribirte a IngenIAr mensual.")
+                elif image_response.status_code != 200:
+                    st.error("Hubo un problema al generar la imagen. Intenta de nuevo más tarde.")
                 else:
-                    # Comprobar si hay otros errores
-                    if image_bytes_1.status_code != 200 or image_bytes_2.status_code != 200:
-                        st.error("Hubo un problema al generar las imágenes. Intenta de nuevo más tarde.")
-                    else:
-                        # Abrir las imágenes desde las respuestas
-                        st.session_state.image_1 = Image.open(io.BytesIO(image_bytes_1.content))
-                        st.session_state.image_2 = Image.open(io.BytesIO(image_bytes_2.content))
+                    # Abrir la imagen desde la respuesta
+                    st.session_state.image = Image.open(io.BytesIO(image_response.content))
 
-                # Si las imágenes ya se han generado, mostrarlas
-                if 'image_1' in st.session_state and 'image_2' in st.session_state:
-                    col1, col2 = st.columns(2)
-                    
-                    with col1:
-                        st.image(st.session_state.image_1, caption="Imagen 1", use_column_width=True)
-                    
-                    with col2:
-                        st.image(st.session_state.image_2, caption="Imagen 2", use_column_width=True)
+                    # Mostrar la imagen generada
+                    st.image(st.session_state.image, caption="Imagen Generada", use_column_width=True)
 
-                    # Crear botones de descarga para ambas imágenes
-                    buf1 = io.BytesIO()
-                    buf2 = io.BytesIO()
-                    st.session_state.image_1.save(buf1, format="PNG")
-                    st.session_state.image_2.save(buf2, format="PNG")
-                    buf1.seek(0)
-                    buf2.seek(0)
+                    # Crear botón de descarga para la imagen
+                    buf = io.BytesIO()
+                    st.session_state.image.save(buf, format="PNG")
+                    buf.seek(0)
 
-                    col1.download_button(
-                        label="Descargar Imagen 1",
-                        data=buf1,
-                        file_name="imagen_1.png",
-                        mime="image/png"
-                    )
-
-                    col2.download_button(
-                        label="Descargar Imagen 2",
-                        data=buf2,
-                        file_name="imagen_2.png",
+                    st.download_button(
+                        label="Descargar Imagen",
+                        data=buf,
+                        file_name="imagen_generada.png",
                         mime="image/png"
                     )
 
