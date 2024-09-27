@@ -80,7 +80,8 @@ if option == "Creador de Contenido":
 
                 gemini_response = chat_session.send_message(prompt)
 
-                st.markdown(f"## Contenido Generado:\n{gemini_response.text}")
+                # Campo para editar el contenido generado
+                contenido_editable = st.text_area("Contenido Generado (puedes editar aquí):", value=gemini_response.text, height=200)
 
                 # Si el usuario eligió generar una imagen
                 if generar_imagen == "Sí":
@@ -157,7 +158,10 @@ elif option == "Analizador de Audiencia":
 
                 gemini_response = chat_session.send_message(prompt)
 
-                st.markdown(f"## Análisis de Audiencia:\n{gemini_response.text}")
+                # Campo para editar el análisis generado
+                analisis_editable = st.text_area("Análisis de Audiencia (puedes editar aquí):", value=gemini_response.text, height=200)
+
+                st.markdown(f"## Análisis de Audiencia Editado:\n{analisis_editable}")
             except Exception as e:
                 st.error(f"Ocurrió un error al analizar la audiencia: {str(e)}")
 
@@ -196,6 +200,9 @@ else:  # Opción: Creador de Campañas de Marketing
 
                 gemini_response = chat_session.send_message(prompt)
 
-                st.markdown(f"## Estrategia de Marketing Generada:\n{gemini_response.text}")
+                # Campo para editar la estrategia generada
+                estrategia_editable = st.text_area("Estrategia de Marketing Generada (puedes editar aquí):", value=gemini_response.text, height=200)
+
+                st.markdown(f"## Estrategia de Marketing Editada:\n{estrategia_editable}")
             except Exception as e:
                 st.error(f"Ocurrió un error al generar la estrategia: {str(e)}")
