@@ -47,6 +47,14 @@ if option == "Creador de Contenido":
     tema = st.text_area("Introduce el tema del contenido que deseas generar:")
     tipo_contenido = st.selectbox("Selecciona el tipo de contenido:", ["Artículo", "Publicación para Redes Sociales", "Boletín", "Anuncio"])
 
+    # Opción para generar o subir imagen
+    generar_imagen = st.radio("¿Quieres generar una imagen?", ("Sí", "No"))
+
+    if generar_imagen == "Sí":
+        st.text("La imagen se generará automáticamente basada en el contenido.")
+    else:
+        uploaded_image = st.file_uploader("Sube una imagen existente (opcional)", type=["png", "jpg", "jpeg"])
+
     if st.button("Generar Contenido"):
         if not tema:
             st.error("Por favor, ingresa un tema para generar contenido.")
@@ -74,27 +82,33 @@ if option == "Creador de Contenido":
 
                 st.markdown(f"## Contenido Generado:\n{gemini_response.text}")
 
-                # Generación de imagen basada en el tema
-                translator = Translator()
-                translated_prompt = translator.translate(tema, src='es', dest='en').text
-                prompt_suffix = f" with vibrant colors {random.randint(1, 1000)}"
-                final_prompt = translated_prompt + prompt_suffix
+                # Si el usuario eligió generar una imagen
+                if generar_imagen == "Sí":
+                    # Generación de imagen basada en el tema
+                    translator = Translator()
+                    translated_prompt = translator.translate(tema, src='es', dest='en').text
+                    prompt_suffix = f" with vibrant colors {random.randint(1, 1000)}"
+                    final_prompt = translated_prompt + prompt_suffix
 
-                # Generar la imagen usando concurrent.futures
-                with st.spinner("Generando imagen..."):
-                    image_response = query({"inputs": final_prompt})
+                    # Generar la imagen usando concurrent.futures
+                    with st.spinner("Generando imagen..."):
+                        image_response = query({"inputs": final_prompt})
 
-                # Manejo de errores
-                if image_response.status_code == 429:
-                    st.error("Error 429: Has alcanzado el límite de uso gratuito. Considera suscribirte a IngenIAr mensual.")
-                elif image_response.status_code != 200:
-                    st.error("Hubo un problema al generar la imagen. Intenta de nuevo más tarde.")
+                    # Manejo de errores
+                    if image_response.status_code == 429:
+                        st.error("Error 429: Has alcanzado el límite de uso gratuito. Considera suscribirte a IngenIAr mensual.")
+                    elif image_response.status_code != 200:
+                        st.error("Hubo un problema al generar la imagen. Intenta de nuevo más tarde.")
+                    else:
+                        # Abrir la imagen desde la respuesta
+                        st.session_state.image = Image.open(io.BytesIO(image_response.content))
+
+                        # Mostrar la imagen generada
+                        st.image(st.session_state.image, caption="Imagen Generada", use_column_width=True)
                 else:
-                    # Abrir la imagen desde la respuesta
-                    st.session_state.image = Image.open(io.BytesIO(image_response.content))
-
-                    # Mostrar la imagen generada
-                    st.image(st.session_state.image, caption="Imagen Generada", use_column_width=True)
+                    # Si el usuario sube una imagen
+                    if uploaded_image is not None:
+                        st.image(uploaded_image, caption="Imagen Subida", use_column_width=True)
 
             except Exception as e:
                 st.error(f"Ocurrió un error al generar el contenido: {str(e)}")
